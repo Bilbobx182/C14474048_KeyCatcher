@@ -1,21 +1,22 @@
 #!/usr/bin/python
 import praw
 import os
-import sys
+
+#variables used
 r = praw.Reddit(user_agent = "bilbobx182 crawler")
-sub ="eternalatom"
+r.login("NAME","PASS")
+sub ="subreddit"
 limit =5
 combo = 0
 switch = False
-#phrase = "IS ababababababa AAAAA - BBBBBB - CCCCCC - DDDDDD - EEEEE   SOMETHING SOMETHING"
 key = ""
 keylist=[]
 
 #Checking to see if I replied to it
-if not os.path.isfile("repliedlists.txt"):
+if not os.path.isfile("posts_replied_to.txt"):
     repliedposts = []
 else:
-    with open("repliedlists.txt", "r") as u:
+    with open("posts_replied_to.txt", "r") as u:
         repliedposts = u.read()
         repliedposts = repliedposts.split("\n")
         repliedposts = filter(None, repliedposts)
@@ -36,12 +37,10 @@ for submission in subreddit.get_new(limit=limit):
                 key = key + word
                 combo += 1
                 switch = True
-
             elif "-" == word and switch == True:
                 key = key + word
                 combo += 1
                 switch = False
-
             else:
                 combo = 0
                 key = ""
@@ -50,4 +49,12 @@ for submission in subreddit.get_new(limit=limit):
     if(combo==5 or combo ==9):
         if (key not in keylist):
             keylist.append(key)
-            print("KEY IS:   " + key)
+            if(submission.id not in repliedposts):
+                print("Bot replying to : ", submission.title)
+                submission.add_comment("I detected a plain text key!")
+                submission.delete()
+                print(keylist)
+
+with open("posts_replied_to.txt", "a") as f:
+    for post_id in repliedposts:
+        f.write(post_id + "\n")
